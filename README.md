@@ -214,4 +214,94 @@ L'annulation du gradient (**gradient vanishing**) est a contrario le fait que le
 
 Le problème de toutes façons demeure : comment efficacement capturer les dépendances de long terme, c’est-à-dire entre la sortie finale et le début de la séquence ? La rétro-propagation à travers le temps, de par son mode de calcul, donne la priorité aux relations de court terme, voir de très court terme. Cela peut être fortement préjudiciable quand le système que l’on cherche à modéliser contient des relations de long terme, comme par exemple l’analyse de texte en langue naturelle, où le sens d’un mot à la fin d’une phrase peut dépendre d’un mot au début de la phrase. Pour régler ce problème, il faut se tourner vers des architectures plus complexes, les architectures **Long Short Term Memory** ou **Gated Recurrent Unit**.
 
+#### Les réseaux Long Short Term Memory
+
+Les réseaux **Long Short Term Memory** (LSTM), littéralement réseaux à mémoire court et long termes, sont une solution pour *venir à bout du problème de l’annulation du gradient dans les réseaux récurrents*.
+
+Leur architecture interne est plus complexe que les réseaux récurrents classiques qui se contentaient de maintenir et transmettre d’un pas de temps à l’autre seulement les valeurs de la couche cachée.
+
+En plus de la couche cachée, cette architecture implique une deuxième ligne d’informations qui contient l’état de la cellule et qui joue le rôle de mémoire. Cette ligne est mise à jour et utilisée par trois composants, appelés des portes (gates) : une porte d’entrée (**input gate**), une porte de sortie (**output gate**) et une porte d’oubli (**forget gate**).
+
+En dehors de cela, une couche LSTM s’utilise comme une couche récurrente simple. Les deux types de couches sont d’ailleurs interchangeables, par exemple avec **Tensorflow/Keras**.
+
+![Schéma général d'une cellule LSTM](images/rnnA.svg)
+
+Sur le schéma, on retrouve des éléments connus : une entrée (le vecteur $$\mathbf{x^t}$$) une sortie, (le vecteur $$\mathbf{h^t}$$), et les connections temporelles à droite et à gauche, qui symbolisent la transmission d’informations à travers le temps, c’est-à-dire tout au long du traitement de la séquence, et qui sont maintenant au nombre de deux :
+
+- La ligne du bas concerne la couche cachée ($$\mathbf{h^t}$$)
+- la ligne du haut, l’état de la cellule (noté $$\mathbf{c^t}$$), qui correspond à la mémoire de notre modèle.
+
+En interne, il y a non plus une seule couche neuronale, mais 4 couches qui vont assurer les différentes fonctions de notre cellule. Ce sont les paramètres (poids et biais) de ces 4 couches qui vont être réglés lors de l’entraînement du réseau.
+
+Notez bien qu’une couche LSTM est composée de 4 couches neuronales internes qui sont des perceptrons simples ayant comme fonction d'activation la fonction sigmoïde ou la fonction tangente hyperbolique.
+
+Voyons maintenant le détail de cette architecture en commençant d’abord par la porte d’oubli, qui permet de supprimer des informations dans la mémoire.
+
+##### Forget Gate
+
+Dans le reste de l’explication, nous supposerons que le vecteur caché $$\mathbf{h}$$ et le vecteur mémoire $$\mathbf{c}$$ sont de taille $$r$$, et que le vecteur d’entrée $$\mathbf{x}$$ est de taille $$p$$.
+
+![La porte d'oubli d'une cellule LSTM](images/rnnB.svg)
+
+L’entrée au temps $$t$$, $$\mathbf{x^t}$$, est concaténée avec la couche cachée au temps précédent, $$\mathbf{h^{t-1}}$$, puis passe dans la première couche neuronale, un perceptron de matrice de poids $$W^f \in \mathbb{R}^{(p+r) \times r}$$, de biais $$\mathbf{b^f} \in \mathbb{R}^r$$, et de fonction d’activation sigmoïde.
+
+Cette couche va fournir, en fonction de $$\mathbf{x^t}$$ et de $$\mathbf{h^{t-1}}$$, un vecteur d’oubli dont les composantes varient entre 0 et 1.
+
+Le vecteur mémoire $$\mathbf{c^{t-1}}$$ va être multiplié point à point par le vecteur d’oubli.
+
+$$ \mathbf{c'} = \mathbf{c^{t-1}} \otimes \sigma(W^f.[\mathbf{x^t};\mathbf{h^{t-1}}]+\mathbf{b^f}) $$
+
+Si la valeur d’oubli correspondant à une composante de la mémoire est proche de 0, cette composante est oubliée, sa valeur devient nulle. Si la valeur d’oubli est proche de 1, au contraire, cette composante est maintenue. Et rien n’empêche d’oublier plus ou moins, pour des valeurs d’oubli intermédiaires. Ce mécanisme permet d’oublier des éléments mémorisés si l’entrée les rend caducs.
+
+##### Input Gate
+
+La deuxième porte, la porte d’entrée, permet d’ajouter des informations dans la mémoire.
+
+![porte d'ajout d'une cellule LSTM](images/rnnC.svg)
+
+On commence par calculer les nouvelles informations à partir de $$\mathbf{x^t}$$ et de $$\mathbf{h^{t-1}}$$ par la couche neuronale en tangente hyperbolique :
+
+$$ \mathbf{n} = \tanh(W^n.[\mathbf{x^t};\mathbf{h^{t-1}}]+\mathbf{b^n}) $$
+
+Puis la porte proprement dite, va sélectionner les informations qui doivent être ajoutées dans la mémoire :
+
+$$ \mathbf{i} = \sigma(W^i.[\mathbf{x^t};\mathbf{h^{t-1}}]+\mathbf{b^i})$$
+
+Et enfin, la mémoire est mise à jour en ajoutant point à point les deux vecteurs :
+
+$$ \mathbf{c^t} = \mathbf{c'} \oplus (\mathbf{i} \otimes \mathbf{n}) $$
+
+
+##### Output gate
+
+Le dernier élément de la LSTM est la porte de sortie.
+
+![porte de sortie d'une cellule LSTM](images/rnnD.svg)
+
+Toujours sur le même principe de la porte (une couche sigmoïde) calculée en fonction des vecteurs $$\mathbf{x^t}$$ et de $$\mathbf{h^{t-1}}$$, pour déterminer la sortie de la couche LSTM, les informations pertinentes de la mémoire sont sélectionnées, après que cette dernière a été normalisée entre -1 et 1 par l’application de la fonction tangente hyperbolique :
+
+$$ \mathbf{h^t} = \tanh(\mathbf{c^t}) \otimes \sigma(W^o.[\mathbf{x^t};\mathbf{h^{t-1}}]+\mathbf{b^o}) $$
+
+##### Apprentissage des LSTM
+
+Lors de l’apprentissage, les erreurs sont retro-propagées dans les 4 couches neuronales. Cette architecture est beaucoup plus capable de capturer les dépendances de long terme, par exemple sur des séquences de plus de 1000 éléments.
+
+Une couche LSTM (Long Short Term Memory, ou mémoire à court et long terme) est une couche possédant deux lignes récurrentes (réinjectée en entrée). Une ligne dite cachée, qui sert de sortie à la couche et une ligne de contexte. La ligne de contexte est mise à jour en fonction des entrées et de la ligne cachée et met à jour à son tour la ligne cachée. Ces mise à jour sont font grâce à des portes permettant de cibler quelles informations doivent être modifiées.
+
+**Le gros intérêt des LSTM pour les vanishing gradient, est que la ligne $$c$$ agit comme une autoroute pour le gradient qui évite la multiplication par des coefficients de plus en plus petits**
+
+#### Les réseaux Gated Recurrent Unit
+
+Depuis leur conception, les LSTM ont donné lieu à de nombreuses variations, visant à en améliorer les performances. Les **Gated Recurrent Unit networks**, ou réseau récurrent à porte est une simplification des LSTM qui est souvent employée de nos jours, parce que le nombre de paramètres associés est plus faible, et qui dit moins de paramètre, dit une convergence plus rapide et un stockage des modèles plus léger, tout en permettant d’obtenir des performances identiques en modélisation.
+
+Sans entrer dans le détail, une cellule GRU combine la couche cachée et la couche d’état en une seule couche, et se compose non plus de 4 couches neuronales comme les LSTM mais de seulement 3, la porte d’oubli et la porte d’entrée étant combinées en une seule porte de mise à jour (update gate).
+
+![Schéma général d'une cellule GRU](images/rnnE.svg)
+
+En pratique, les couches GRU et LSTM sont interchangeables, comme elles le sont avec les couches RNN simples : partout où vous utilisez une couche RNN simple, vous pouvez la changer en couche LSTM ou couche GRU.
+
+Une couche GRU (Gated Recurrent Unit) est une amélioration des LSTM avec  une seule ligne récurrente et moins de paramètres, tout en possédant des performances équivalentes.
+
+
+
 
