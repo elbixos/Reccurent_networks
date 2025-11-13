@@ -151,7 +151,7 @@ La couche cachée joue le rôle de vecteur d’état (notez que c’est pour cel
 
 Le calcul de l’activation des neurones de la couche cachée se fait exactement comme dans un perceptron :
 
-** h_j^t = act_h(\sum_{i=1}^{i\leq r} W^{hh}_{i,j}.h^{t-1}_i + \sum_{i=1}^{i\leq r} W^{xh}_{i,j}.x^{t}_i + b_j^h) $$
+$$ h_j^t = act_h(\sum_{i=1}^{i\leq r} W^{hh}_{i,j}.h^{t-1}_i + \sum_{i=1}^{i\leq r} W^{xh}_{i,j}.x^{t}_i + b_j^h) $$
 
 ou en notation matricielle :
 
