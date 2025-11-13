@@ -141,4 +141,40 @@ Si on replie temporellement le réseau, on obtient ce schéma, qui est celui qu�
 
 Une couche neuronale récurrente est une couche dont une partie des sorties est ré-injectée en entrée. Un réseau de neurones récurrent est un réseau de neurones contenant au moins une couche récurrente.
 
+#### Structure interne d’un réseau récurrent
 
+Voyons maintenant ce qu’il se passe si on ouvre le capot. Je l’ai dit, un réseau de neurones récurrent est un perceptron avec une couche d’entrée, une couche cachée et une couche de sortie. La particularité est ici qu’aux entrées naturelles (c’est-à-dire les données que l’on souhaite traiter) du réseau, le vecteur $$\mathbf{x^t}$$, on ajoute (il serait plus pertinent de dire « on concatène ») un vecteur de la même taille que la couche cachée. Pour le reste, le fonctionnement est strictement identique à un perceptron multicouche. Voici ce que donnerait une réseau récurrent avec $$q$$ neurones de sortie, $$r$$ neurones cachés et $$p$$ neurones d’entrée :
+
+![schéma rnn simple](images/rnn5.svg)
+
+La couche cachée joue le rôle de vecteur d’état (notez que c’est pour cela qu’on note ce vecteur $$\mathbf{h}$$, comme *hidden*, caché en anglais) : les valeurs d’activation des neurones cachés sont recopiées en entrée pour calculer l’itération suivante.
+
+Le calcul de l’activation des neurones de la couche cachée se fait exactement comme dans un perceptron :
+
+** h_j^t = act_h(\sum_{i=1}^{i\leq r} W^{hh}_{i,j}.h^{t-1}_i + \sum_{i=1}^{i\leq r} W^{xh}_{i,j}.x^{t}_i + b_j^h) $$
+
+ou en notation matricielle :
+
+$$ \mathbf{h^t} = act_h(W^{hh}.\mathbf{h^{t-1}} + W^{xh}.\mathbf{x^{t}} + \mathbf{b^h}) $$
+
+La fonction $$act_h$$ est la fonction d’activation de la couche cachée. En général, on prend la fonction tangente hyperbolique ($$tanh$$).
+
+La matrice $$W^{hh} \in \mathbb{R}^{r \times r}$$ est composée des poids de connections entre la couche cachée au temps $$t-1$$ et la couche cachée au temps $$t$$, $$W^{xh} \in \mathbb{R}^{p \times r}$$ est la matrice des poids entre les entrées et la couche cachée et $$\mathbf{b^h} \in \mathbb{R}^{r}$$ est le vecteur de biais.
+
+La sortie se calcule ainsi :
+
+$$ \mathbf{y^t} = act_y(W^{hy}\mathbf{h^{t}} + \mathbf{b^y}) $$
+
+avec $$W^{hy} \in \mathbb{R}^{r \times q}$$, la matrice des poids entre la couche cachée et la couche de sortie, et $$\mathbf{b^y} \in \mathbb{R}^{q}$$, le vecteur de biais de la couche de sortie. La fonction d’activation, $$act_y$$ dépend du problème.
+
+Les paramètres réglés pendant l’apprentissage sont les matrices de poids ($$W^{hh}$$, $$W^{xh}$$, $$W^{hy}$$) et les biais ($$\mathbf{b^h}$$, $$\mathbf{b^y}$$).
+
+Cette architecture est un réseau récurrent complet. En pratique, on peut souhaiter avoir des réseaux plus complexes, par exemple en empilant plusieurs couches récurrentes. Pour cela, les plateformes comme **tensorflow/keras** offrent une couche récurrente simple (*keras.layers.SimpleRNN* par exemple avec *tensorflow/keras*), paramétrée par le nombre de neurones dans la couche cachée et dans la couche de sortie. Le schéma interne d’une couche RNN simple est le suivant :
+
+![schéma interne d'un rnn simple](images/rnn6.svg)
+
+L’entrée de la couche est en bas, la sortie de la couche (le vecteur caché) est en haut. L’entrée à gauche et la sortie à droite symbolisent les informations qui sont transmises d’une itération sur l’autre.
+
+Cette couche est empilable, au même titre qu’une couche dense ou convolutive, ce qui permet de créer des architectures adaptées aux besoins du problème à résoudre. Par exemple, l’architecture suivante est un modèle qui relie une séquence à une sortie unique :
+
+Les couches RNN (SimpleRNN, mais également les couches LSTM ou GRU que nous verrons par la suite) s’utilisent de la même façon que les autres couches, avec quelques paramètres en plus pour gérer les aspects temporels, comme par exemple le type de sortie : une sortie unique, la valeur de $$\mathbf{h^n}$$, ou la séquence $$(\mathbf{h^1},\ldots,\mathbf{h^n})$$, séquence qui peut être utilisée en entrée d’une autre couche RNN, par exemple.
