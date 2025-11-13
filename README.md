@@ -79,7 +79,7 @@ Et si nous voulons non pas prédire la prochaine position de la balle, mais la t
 
 Bien évidemment, au fur et à mesure, les erreurs de prédiction vont avoir tendance à s’accumuler et à partir d’un certain nombre de pas de temps (**horizon de prédiction**) notre trajectoire prédite deviendra peu fiable, et ce d’autant plus vite que le système que nous essayons de modéliser est complexe et non linéaire.
 
-L'**horizon de prédiction** d'un modèle correspond à la durée qu'il est capable de prédire correctement dans le futur.
+L'**horizon de prédiction** d'un modèle correspond à la *durée qu'il est capable de prédire correctement dans le futur*.
 
 Le même principe peut être utilisé pour faire de la classification. Là, plutôt que d’essayer de prédire une position future d’une trajectoire, nous pourrions essayer de déterminer un type de trajectoire : cercle, droite, parabole, … Notre base d’exemple serait construit à partir de morceaux de trajectoire, associés à son type. Et nous nous retrouvions dans un cas de classification classique, avec les mêmes outils et les mêmes techniques utilisés par exemple pour la classification d’image. Rien de différent, à part la construction de la base d’exemple.
 
@@ -97,4 +97,48 @@ Un réseau dense permet de répondre aux critères 2 et 3. Il est cependant prob
 
 C’est pourquoi, il est apparu utile de définir une architecture de réseaux de neurones dédiées au traitement de séquences : les réseaux de neurones récurrents.
 
-### 
+### Reseaux de neruones réccurents
+
+#### Principes de fonctionnements
+
+L’idée derrière les réseaux de neurones récurrents (ou réseaux récurrents dans la suite) est assez simple : il s’agit de réinjecter en entrée du réseau l’état du réseau obtenu à l’étape précédente.
+
+Pour bien comprendre comment nous pouvons mettre en œuvre ce principe, repartons du schéma classique d’un réseau de neurones qui associe une entrée à une sortie :
+
+![Un réseau qui prédit une sortie à partir d'une entrée au temps t](images/rnn1.svg)
+
+L’entrée de ce réseau est l’élément au temps $$t$$ de la séquence : $$\mathbf{x^t}$$. Si on applique séquentiellement toute la séquence, voilà ce qu’on obtient :
+
+![Un réseau qui prédit des sorties à partir d'entrées successives.](images/rnn2.svg)
+
+Si nous nous limitons à faire cela, il est impossible d’apprendre les relations temporelles existant entre les éléments de la séquence. Nous sommes dans le cas d’un réseau classique, où $$\mathbf{y^n}$$ est uniquement déterminé par $$\mathbf{x^n}$$ : $$\mathbf{y^n} = f(\mathbf{x^n})$$. Ce qui n’est pas ce que nous souhaitons a priori.
+
+En effet, notre hypothèse est que $$\mathbf{y^n}$$ est une fonction de toute la séquence $$(\mathbf{x^0},\mathbf{x^1},\mathbf{x^2},\ldots,\mathbf{x^n})$$.
+
+Pour que cela soit le cas, nous allons injecter dans le réseau, en plus de l’entrée $$\mathbf{x^t}$$, un **vecteur d’état**, noté $$\mathbf{h^t}$$, calculé par le réseau à l’étape précédente :
+
+![premier rnn](images/rnn3.svg)
+
+Le vecteur $$\mathbf{h^{t}}$$ est déterminé par une fonction de $$\mathbf{x^t}$$ et $$mathbf{h^{t-1}}$$ : $$\mathbf{h^{t}}=g(\mathbf{x^t},\mathbf{h^{t-1}})$$.
+
+Le **vecteur d’état** représente *l’histoire du réseau*, c’est-à-dire ce qui s’est passé avant. Quelles ont été les entrées précédentes ? C’est lui qui permet le pont temporel entre les différents pas de temps.
+
+Avec cette architecture, $$\mathbf{y^n} = f(\mathbf{x^n},\mathbf{h^{n-1}})$$.
+
+Mais comme $$\mathbf{h^{n-1}}$$ est lui même calculé à partir de $$\mathbf{x^{n-1}}$$ et $$\mathbf{h^{n-2}}$, $$\mathbf{y^n} = f(\mathbf{x^n},g(\mathbf{x^{n-1}},\mathbf{h^{t-2}})$$.
+
+ Et ainsi de suite : $$\mathbf{y^n} = f(\mathbf{x^n},g(\mathbf{x^{n-1}},g(\mathbf{x^{n-2}},\mathbf{h^{n-3}})))$$.
+ 
+ Notez bien les appels récursifs à la fonction $$g$$. C’est bien pour cela que l’on parle de **réseaux de neurones récurrents**.
+ 
+ Au final, notre sortie $$\mathbf{y^n}$$ dépend de toutes les entrées précédentes et d’un vecteur d’état initial : $$\mathbf{y^n} = f'(\mathbf{x^n},\ldots,\mathbf{x^0};\mathbf{h^0})$$.
+ 
+ Le vecteur d’état utilisé pour la première étape, $$\mathbf{h^0}$$, est en général le vecteur nul (dont toutes les composantes sont à 0).
+
+Si on replie temporellement le réseau, on obtient ce schéma, qui est celui qu’on utilise pour représenter pour les réseaux récurrents :
+
+![Le schéma "replié" d'un réseau récurrent](images/rnn4.svg)
+
+Une couche neuronale récurrente est une couche dont une partie des sorties est ré-injectée en entrée. Un réseau de neurones récurrent est un réseau de neurones contenant au moins une couche récurrente.
+
+
