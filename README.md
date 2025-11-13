@@ -97,7 +97,7 @@ Un réseau dense permet de répondre aux critères 2 et 3. Il est cependant prob
 
 C’est pourquoi, il est apparu utile de définir une architecture de réseaux de neurones dédiées au traitement de séquences : les réseaux de neurones récurrents.
 
-### Reseaux de neruones réccurents
+### Reseaux de neurones réccurents
 
 #### Principes de fonctionnements
 
@@ -119,13 +119,13 @@ Pour que cela soit le cas, nous allons injecter dans le réseau, en plus de l’
 
 ![premier rnn](images/rnn3.svg)
 
-Le vecteur $$\mathbf{h^{t}}$$ est déterminé par une fonction de $$\mathbf{x^t}$$ et $$mathbf{h^{t-1}}$$ : $$\mathbf{h^{t}}=g(\mathbf{x^t},\mathbf{h^{t-1}})$$.
+Le vecteur $$\mathbf{h^{t}}$$ est déterminé par une fonction de $$\mathbf{x^t}$$ et $$\mathbf{h^{t-1}}$$ : $$\mathbf{h^{t}}=g(\mathbf{x^t},\mathbf{h^{t-1}})$$.
 
 Le **vecteur d’état** représente *l’histoire du réseau*, c’est-à-dire ce qui s’est passé avant. Quelles ont été les entrées précédentes ? C’est lui qui permet le pont temporel entre les différents pas de temps.
 
 Avec cette architecture, $$\mathbf{y^n} = f(\mathbf{x^n},\mathbf{h^{n-1}})$$.
 
-Mais comme $$\mathbf{h^{n-1}}$$ est lui même calculé à partir de $$\mathbf{x^{n-1}}$$ et $$\mathbf{h^{n-2}}$, $$\mathbf{y^n} = f(\mathbf{x^n},g(\mathbf{x^{n-1}},\mathbf{h^{t-2}})$$.
+Mais comme $$\mathbf{h^{n-1}}$$ est lui même calculé à partir de $$\mathbf{x^{n-1}}$$ et $$\mathbf{h^{n-2}}$$, $$\mathbf{y^n} = f(\mathbf{x^n},g(\mathbf{x^{n-1}},\mathbf{h^{t-2}}))$$.
 
  Et ainsi de suite : $$\mathbf{y^n} = f(\mathbf{x^n},g(\mathbf{x^{n-1}},g(\mathbf{x^{n-2}},\mathbf{h^{n-3}})))$$.
  
