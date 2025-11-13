@@ -202,7 +202,7 @@ A contrario, ils peuvent également devenir de **plus en plus faibles**, jusqu�
 
 Cela perturbe la prise en compte des dépendances temporelles longues.
 
-Dans les deux cas, il est possible de limiter la rétro-propagation à $$\mathbf{T}$$ pas de temps, c'est à dire que plutôt que de rétropropager l'erreur commise sur $$\mathbf{h^n}$$ jusqu'à \(\mathbf{h^0}\), elle est stoppée à \(\mathbf{h^{n-T}}$$.
+Dans les deux cas, il est possible de limiter la rétro-propagation à $$\mathbf{T}$$ pas de temps, c'est à dire que plutôt que de rétropropager l'erreur commise sur $$\mathbf{h^n}$$ jusqu'à $$\mathbf{h^0}$$, elle est stoppée à $$\mathbf{h^{n-T}}$$.
 
 Cela permet de limiter l’instabilité du calcul du gradient, mais en focalisant l’apprentissage sur les temps courts, c’est-à-dire que les influences à long terme ne sont pas prises en compte.
 
