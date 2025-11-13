@@ -178,3 +178,40 @@ L’entrée de la couche est en bas, la sortie de la couche (le vecteur caché) 
 Cette couche est empilable, au même titre qu’une couche dense ou convolutive, ce qui permet de créer des architectures adaptées aux besoins du problème à résoudre. Par exemple, l’architecture suivante est un modèle qui relie une séquence à une sortie unique :
 
 Les couches RNN (SimpleRNN, mais également les couches LSTM ou GRU que nous verrons par la suite) s’utilisent de la même façon que les autres couches, avec quelques paramètres en plus pour gérer les aspects temporels, comme par exemple le type de sortie : une sortie unique, la valeur de $$\mathbf{h^n}$$, ou la séquence $$(\mathbf{h^1},\ldots,\mathbf{h^n})$$, séquence qui peut être utilisée en entrée d’une autre couche RNN, par exemple.
+
+#### Apprentissage des réseaux récurrents
+
+Avant de parler de l’apprentissage, faisons un bref retour sur le fonctionnement d’un réseau récurrent et les paramètres impliqués dans le calcul de la sortie du réseau. supposons qu’on présente successivement au réseau les $$n$$ éléments d’une séquence de vecteurs d’entrée $$\mathbf{x}$$, et que seule la sortie du réseau à la fin de la séquence nous intéresse, le calcul se fera suivant ce schéma (le graphe computationnel déroulé dans le temps) :
+
+![Propagation avant à travers le temps](images/rnn8.svg)
+
+Les matrices de poids et les vecteurs de biais sont identiques tout au long du calcul. Il s’agit bien du même réseau sur lequel sont réappliquées les entrées. Une fois le calcul de $$\mathbf{y^n}$$ réalisé, le calcul de la fonction de perte peut se faire en comparant la sortie obtenue à la sortie désirée. En phase d’apprentissage, l’erreur est rétro-propagée dans le réseau, non seulement spatialement (de la sortie à la couche cachée), mais également à travers le temps (entre les différentes instances temporelles de la couche cachée) :
+
+![Propagation arrière à travers le temps](images/rnn9.svg)
+
+Cet algorithme est la rétro-propagation à travers le temps (ou backpropagation through time en anglais) souvent abrégée en BTT. En calculant ainsi le gradient de la fonction de perte par rapport aux paramètres du réseau $$(W^{hh}$$, $$W^{xh}$$, $$W^{hy}$$, $$\mathbf{b^h}$$, $$\mathbf{b^y}$$), on peut déterminer les modifications à apporter à ces derniers pour la minimiser.
+
+La rétro-propagation à travers le temps (ou backpropagation through time en anglais) est un algorithme d'apprentissage pour les réseaux de neurones récurrents. Il consiste à propager l'erreur commise de la sortie vers les entrées, à travers les différentes couches du réseaux et à travers les itérations successives des couches récurrentes.
+
+
+Cet algorithme souffre de deux problèmes majeurs qui limitent son application, et qui sont toutes deux liées au calcul du gradient. Si la séquence d’apprentissage est longue, le gradient de la fonction de perte $$\mathbf{L}$$ par rapport aux paramètres implique une longue chaîne de multiplication matricielle. 
+
+Sans entrer dans les détails du calcul, les **gradients peuvent devenir de plus en plus grands**, et conduire à leur explosion ce qui rend l’optimisation impossible.
+
+A contrario, ils peuvent également devenir de **plus en plus faibles**, jusqu’à s’annuler, ce qui empêche également l’optimisation (si les gradients valent 0 pour toutes valeurs, impossible de déterminer dans quelle direction se déplacer).
+
+Cela perturbe la prise en compte des dépendances temporelles longues.
+
+Dans les deux cas, il est possible de limiter la rétro-propagation à $$\mathbf{T}$$ pas de temps, c'est à dire que plutôt que de rétropropager l'erreur commise sur $$\mathbf{h^n}$$ jusqu'à \(\mathbf{h^0}\), elle est stoppée à \(\mathbf{h^{n-T}}$$.
+
+Cela permet de limiter l’instabilité du calcul du gradient, mais en focalisant l’apprentissage sur les temps courts, c’est-à-dire que les influences à long terme ne sont pas prises en compte.
+
+Pour éviter l’explosion des gradients, il est aussi possible de les borner : il suffit de limiter leur valeur absolue. Pour éviter l’annulation des gradients, il est possible de choisir une fonction d’activation ne souffrant pas de ce problème (par exemple, la fonction ReLU déjà vue dans les réseaux très profonds qui peuvent eux aussi souffrir de ce type de problèmes) et d’initialiser les matrices de poids à la matrice identité.
+
+L'explosion du gradient (**gradient exploding**) est le fait que le gradient de l'erreur grandisse de telle manière qu'il devient impossible à calculer.
+
+L'annulation du gradient (**gradient vanishing**) est a contrario le fait que le gradient devienne si petit qu'il ne donne pas d'information sur la direction à prendre pour minimiser la fonction de perte. Les deux phénomènes obèrent la capacité à apprendre du réseau.
+
+Le problème de toutes façons demeure : comment efficacement capturer les dépendances de long terme, c’est-à-dire entre la sortie finale et le début de la séquence ? La rétro-propagation à travers le temps, de par son mode de calcul, donne la priorité aux relations de court terme, voir de très court terme. Cela peut être fortement préjudiciable quand le système que l’on cherche à modéliser contient des relations de long terme, comme par exemple l’analyse de texte en langue naturelle, où le sens d’un mot à la fin d’une phrase peut dépendre d’un mot au début de la phrase. Pour régler ce problème, il faut se tourner vers des architectures plus complexes, les architectures **Long Short Term Memory** ou **Gated Recurrent Unit**.
+
+
