@@ -4,6 +4,10 @@
 
 ## Réseaux Récurrents
 
+Ce cours a été rédigé, de mémoire, par Manuel Clergue, pour un projet maintenant aussi abandonné que les réseaux récurrents.
+
+Néanmoins il me semble intéressant d'en garder une trace ici...
+
 ### Motivations
 
 Jusqu’à présent, les données que nous fournissons à nos réseaux de neurones sont non ordonnées, c’est-à-dire que l’ordre de leur traitement n’est pas pertinent. Et d’ailleurs, lors de l’entraînement du réseau, il est fortement conseillé de les passer dans un ordre aléatoire et changé à chaque époque, pour justement éviter que l’apprentissage soit influencé par un ordre artificiellement créé. Après tout, une image de chat doit rester une image de chat, qu’elle soit précédée ou non par une image de chien dans notre base d’exemples.
@@ -26,7 +30,9 @@ Là où les modèles précédents étaient limités à faire des correspondances
 
 ![applications](images/prernn4.svg)
 
-Une séquence est une suite de données ordonnée dans le temps. La modélisation de séquence est l'activité qui consiste à chercher les relations temporelles qui existent entre les données.
+Une **séquence** est une *suite de données ordonnée dans le temps*. 
+
+La **modélisation de séquence** est l'activité qui consiste à *chercher les relations temporelles qui existent entre les données*.
 
 Les réseaux de neurones récurrents sont efficaces pour la modélisation de séquence. Il est néanmoins légitime de se demander si une nouvelle architecture de réseau est réellement nécessaire pour cette tâche. En effet, les réseaux de neurones classiques semblent suffisants. Nous pourrions considérer une séquence comme une donnée, qu’on fournirait en bloc.
 
@@ -69,7 +75,7 @@ Une fois l’apprentissage réalisé, c’est-à-dire une fois que les paramètr
 Et si nous voulons non pas prédire la prochaine position de la balle, mais la trajectoire future ? Il suffit dans ce cas de prendre la sortie du réseau et de construire une nouvelle séquence en prenant la séquence initiale, en lui enlevant la première position, en lui ajoutant la sortie du modèle et en la réinjectant dans le modèle, pour obtenir la prochaine position de la trajectoire prédite. Et ainsi de suite, jusqu’à obtenir une trajectoire de la longueur désirée.
 
 
-![Prédiction à plusieurs pas de temps réalisée en injectant en entrée la sortie obtenue au pas précédent.](images/prenn3.svg)
+![Prediction à plusieurs pas de temps](images/prernn3.svg)
 
 Bien évidemment, au fur et à mesure, les erreurs de prédiction vont avoir tendance à s’accumuler et à partir d’un certain nombre de pas de temps (**horizon de prédiction**) notre trajectoire prédite deviendra peu fiable, et ce d’autant plus vite que le système que nous essayons de modéliser est complexe et non linéaire.
 
